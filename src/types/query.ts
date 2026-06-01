@@ -14,6 +14,7 @@ export type Group = {
   id: string;
   logic: 'AND' | 'OR';
   children: Array<Condition | Group>;
+  isCollapsed?: boolean;
 };
 
 export type QueryTree = Group; // root is always a group

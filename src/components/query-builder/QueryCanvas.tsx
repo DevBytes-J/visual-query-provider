@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useQueryStore } from '../../store/queryStore';
 import { GroupNode } from './GroupNode';
@@ -9,6 +9,18 @@ import { SchemaSidebar } from './SchemaSidebar';
 export function QueryCanvas() {
   const queryTree = useQueryStore((state) => state.queryTree);
   const addCondition = useQueryStore((state) => state.addCondition);
+
+  // Keyboard shortcut: Cmd/Ctrl + Shift + A to add rule to root
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        addCondition(queryTree.id);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [addCondition, queryTree.id]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
