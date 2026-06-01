@@ -6,6 +6,7 @@ import { useQueryStore } from '../../store/queryStore';
 import { GroupNode } from './GroupNode';
 import { SchemaSidebar } from './SchemaSidebar';
 import { QueryPreview } from './QueryPreview';
+import { QueryToolbar } from './QueryToolbar';
 
 export function QueryCanvas() {
   const queryTree = useQueryStore((state) => state.queryTree);
@@ -46,10 +47,15 @@ export function QueryCanvas() {
         {/* Main Canvas (Bakery Board) */}
         <div className="flex-1 p-8 bg-white/40 overflow-y-auto">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-[#3F2A1E] font-serif">Query Patisserie Board</h2>
-            <div className="text-sm text-[#D4A373] bg-white/80 px-4 py-2 rounded-full shadow-sm border border-pink-100">
-              Bake complex queries. One delicious layer at a time.
+            <div>
+              <h2 className="text-3xl font-bold text-[#3F2A1E] font-serif">Query Patisserie Board</h2>
+              <div className="text-sm text-[#D4A373] bg-white/80 px-4 py-2 rounded-full shadow-sm border border-pink-100 mt-2 inline-block">
+                Bake complex queries. One delicious layer at a time.
+              </div>
             </div>
+            
+            {/* The Toolbar with our new Import/Export buttons! */}
+            <QueryToolbar />
           </div>
           
           {/* Root Group Node (The very first giant cake box!) */}
