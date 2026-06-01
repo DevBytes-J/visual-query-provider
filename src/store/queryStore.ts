@@ -8,6 +8,7 @@ interface QueryState {
   removeNode: (id: string, parentId: string) => void;
   updateCondition: (id: string, updates: Partial<Condition>) => void;
   updateGroupLogic: (id: string, logic: 'AND' | 'OR') => void;
+  toggleGroupCollapse: (id: string) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -16,6 +17,7 @@ const createEmptyGroup = (): Group => ({
   id: generateId(),
   logic: 'AND',
   children: [],
+  isCollapsed: false,
 });
 
 const createEmptyCondition = (initialField?: string, initialType?: ValueType): Condition => ({
@@ -67,6 +69,7 @@ export const useQueryStore = create<QueryState>((set) => ({
   addCondition: (parentId, initialField, initialType) => set((state) => ({
     queryTree: recursivelyUpdateNode(state.queryTree, parentId, (group) => {
       group.children.push(createEmptyCondition(initialField, initialType));
+      group.isCollapsed = false; // Auto-expand when adding
     }) as Group,
   })),
 
@@ -99,6 +102,12 @@ export const useQueryStore = create<QueryState>((set) => ({
   updateGroupLogic: (id, logic) => set((state) => ({
     queryTree: recursivelyUpdateNode(state.queryTree, id, (group) => {
       group.logic = logic;
+    }) as Group,
+  })),
+
+  toggleGroupCollapse: (id) => set((state) => ({
+    queryTree: recursivelyUpdateNode(state.queryTree, id, (group) => {
+      group.isCollapsed = !group.isCollapsed;
     }) as Group,
   })),
 }));
