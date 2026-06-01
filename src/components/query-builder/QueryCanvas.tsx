@@ -5,6 +5,7 @@ import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useQueryStore } from '../../store/queryStore';
 import { GroupNode } from './GroupNode';
 import { SchemaSidebar } from './SchemaSidebar';
+import { QueryPreview } from './QueryPreview';
 
 export function QueryCanvas() {
   const queryTree = useQueryStore((state) => state.queryTree);
@@ -53,6 +54,9 @@ export function QueryCanvas() {
           
           {/* Root Group Node (The very first giant cake box!) */}
           <GroupNode node={queryTree} isRoot={true} />
+          
+          {/* Live Code Preview (Magic Receipt Printer!) */}
+          <QueryPreview />
         </div>
         
       </div>
