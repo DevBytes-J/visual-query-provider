@@ -1,23 +1,49 @@
 'use client';
 
 import React from 'react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useQueryStore } from '../../store/queryStore';
 import { GroupNode } from './GroupNode';
+import { SchemaSidebar } from './SchemaSidebar';
 
 export function QueryCanvas() {
   const queryTree = useQueryStore((state) => state.queryTree);
+  const addCondition = useQueryStore((state) => state.addCondition);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    // If we dropped a schema field onto a GroupNode Cake Box
+    if (over && over.id.toString().startsWith('group-') && active.data.current?.field) {
+      const groupId = over.id.toString().replace('group-', '');
+      const fieldData = active.data.current.field;
+      
+      // Add a new condition to that group with the dragged ingredient's data!
+      addCondition(groupId, fieldData.id, fieldData.type);
+    }
+  };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-[#F8F1E9] min-h-[500px] rounded-3xl shadow-inner border border-[#D4A373]/20">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#3F2A1E] font-serif">Query Patisserie Board</h2>
-        <div className="text-sm text-[#D4A373] bg-white/60 px-4 py-2 rounded-full shadow-sm">
-          Bake complex queries. One delicious layer at a time.
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="flex w-full max-w-6xl mx-auto min-h-[600px] rounded-3xl shadow-xl border border-[#D4A373]/20 overflow-hidden bg-[#F8F1E9]">
+        
+        {/* Left Sidebar (Ingredients Shelf) */}
+        <SchemaSidebar />
+
+        {/* Main Canvas (Bakery Board) */}
+        <div className="flex-1 p-8 bg-white/40 overflow-y-auto">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-3xl font-bold text-[#3F2A1E] font-serif">Query Patisserie Board</h2>
+            <div className="text-sm text-[#D4A373] bg-white/80 px-4 py-2 rounded-full shadow-sm border border-pink-100">
+              Bake complex queries. One delicious layer at a time.
+            </div>
+          </div>
+          
+          {/* Root Group Node (The very first giant cake box!) */}
+          <GroupNode node={queryTree} isRoot={true} />
         </div>
+        
       </div>
-      
-      {/* Root Group Node (The very first giant cake box!) */}
-      <GroupNode node={queryTree} isRoot={true} />
-    </div>
+    </DndContext>
   );
 }
