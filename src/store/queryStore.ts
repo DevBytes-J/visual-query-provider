@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { Group, Condition, QueryNode } from '../types/query';
+import { Group, Condition, QueryNode, ValueType } from '../types/query';
 
 interface QueryState {
   queryTree: Group;
   addGroup: (parentId: string) => void;
-  addCondition: (parentId: string) => void;
+  addCondition: (parentId: string, initialField?: string, initialType?: ValueType) => void;
   removeNode: (id: string, parentId: string) => void;
   updateCondition: (id: string, updates: Partial<Condition>) => void;
   updateGroupLogic: (id: string, logic: 'AND' | 'OR') => void;
@@ -18,12 +18,12 @@ const createEmptyGroup = (): Group => ({
   children: [],
 });
 
-const createEmptyCondition = (): Condition => ({
+const createEmptyCondition = (initialField?: string, initialType?: ValueType): Condition => ({
   id: generateId(),
-  field: '',
+  field: initialField || '',
   operator: 'eq',
   value: '',
-  valueType: 'string',
+  valueType: initialType || 'string',
 });
 
 // Helper to recursively update the tree
@@ -64,9 +64,9 @@ export const useQueryStore = create<QueryState>((set) => ({
     }) as Group,
   })),
 
-  addCondition: (parentId) => set((state) => ({
+  addCondition: (parentId, initialField, initialType) => set((state) => ({
     queryTree: recursivelyUpdateNode(state.queryTree, parentId, (group) => {
-      group.children.push(createEmptyCondition());
+      group.children.push(createEmptyCondition(initialField, initialType));
     }) as Group,
   })),
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import { Group } from '../../types/query';
 import { useQueryStore } from '../../store/queryStore';
 import { ConditionNode } from './ConditionNode';
@@ -12,9 +13,17 @@ interface GroupNodeProps {
 
 export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
   const { addCondition, addGroup, removeNode, updateGroupLogic } = useQueryStore();
+  
+  // Make the Cake Box droppable!
+  const { isOver, setNodeRef } = useDroppable({
+    id: `group-${node.id}`,
+  });
 
   return (
-    <div className={`p-4 rounded-2xl border-2 border-dashed ${isRoot ? 'border-[#E89AB8] bg-[#F8F1E9]/50' : 'border-[#A8D5BA] bg-white/40'} flex flex-col gap-4 backdrop-blur-md transition-all`}>
+    <div 
+      ref={setNodeRef}
+      className={`p-4 rounded-2xl border-2 ${isOver ? 'border-solid bg-pink-50' : 'border-dashed'} ${isRoot ? 'border-[#E89AB8] bg-[#F8F1E9]/50' : 'border-[#A8D5BA] bg-white/40'} flex flex-col gap-4 backdrop-blur-md transition-all`}
+    >
       {/* Group Header (Cake Box Labels) */}
       <div className="flex items-center gap-3">
         <div className="flex bg-white/80 rounded-lg p-1 shadow-sm border border-pink-100">
@@ -47,10 +56,12 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
         </div>
       </div>
 
-      {/* Children List (The Recursive Magic! Cake boxes inside cake boxes) */}
-      <div className="flex flex-col gap-3 pl-4 border-l-2 border-pink-200/50 ml-2">
+      {/* Children List */}
+      <div className="flex flex-col gap-3 pl-4 border-l-2 border-pink-200/50 ml-2 min-h-[50px]">
         {node.children.length === 0 ? (
-          <div className="text-sm text-pink-300 italic py-2">This cake box is empty! Add some ingredients.</div>
+          <div className={`text-sm py-2 transition-colors ${isOver ? 'text-pink-500 font-bold' : 'text-pink-300 italic'}`}>
+            {isOver ? 'Drop ingredient here!' : 'This cake box is empty! Drag an ingredient here.'}
+          </div>
         ) : (
           node.children.map((child) => {
             if ('logic' in child) {
