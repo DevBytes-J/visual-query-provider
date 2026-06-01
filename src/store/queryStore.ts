@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Group, Condition, QueryNode, ValueType } from '../types/query';
 
 interface QueryState {
@@ -9,6 +10,8 @@ interface QueryState {
   updateCondition: (id: string, updates: Partial<Condition>) => void;
   updateGroupLogic: (id: string, logic: 'AND' | 'OR') => void;
   toggleGroupCollapse: (id: string) => void;
+  setQueryTree: (tree: Group) => void;
+  clearQueryTree: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -57,57 +60,68 @@ const recursivelyRemoveNode = (node: Group, targetId: string): Group => {
   };
 };
 
-export const useQueryStore = create<QueryState>((set) => ({
-  queryTree: createEmptyGroup(),
-  
-  addGroup: (parentId) => set((state) => ({
-    queryTree: recursivelyUpdateNode(state.queryTree, parentId, (group) => {
-      group.children.push(createEmptyGroup());
-    }) as Group,
-  })),
+export const useQueryStore = create<QueryState>()(
+  persist(
+    (set) => ({
+      queryTree: createEmptyGroup(),
+      
+      setQueryTree: (tree) => set({ queryTree: tree }),
+      
+      clearQueryTree: () => set({ queryTree: createEmptyGroup() }),
 
-  addCondition: (parentId, initialField, initialType) => set((state) => ({
-    queryTree: recursivelyUpdateNode(state.queryTree, parentId, (group) => {
-      group.children.push(createEmptyCondition(initialField, initialType));
-      group.isCollapsed = false; // Auto-expand when adding
-    }) as Group,
-  })),
+      addGroup: (parentId) => set((state) => ({
+        queryTree: recursivelyUpdateNode(state.queryTree, parentId, (group) => {
+          group.children.push(createEmptyGroup());
+        }) as Group,
+      })),
 
-  removeNode: (id, parentId) => set((state) => {
-    // If we are removing the root, just reset it
-    if (id === state.queryTree.id) {
-      return { queryTree: createEmptyGroup() };
-    }
-    return {
-      queryTree: recursivelyRemoveNode(state.queryTree, id),
-    };
-  }),
+      addCondition: (parentId, initialField, initialType) => set((state) => ({
+        queryTree: recursivelyUpdateNode(state.queryTree, parentId, (group) => {
+          group.children.push(createEmptyCondition(initialField, initialType));
+          group.isCollapsed = false; // Auto-expand when adding
+        }) as Group,
+      })),
 
-  updateCondition: (id, updates) => set((state) => {
-    const updateChild = (node: QueryNode): QueryNode => {
-      if ('field' in node && node.id === id) {
-        return { ...node, ...updates };
-      }
-      if ('logic' in node) {
+      removeNode: (id, parentId) => set((state) => {
+        // If we are removing the root, just reset it
+        if (id === state.queryTree.id) {
+          return { queryTree: createEmptyGroup() };
+        }
         return {
-          ...node,
-          children: node.children.map(updateChild),
+          queryTree: recursivelyRemoveNode(state.queryTree, id),
         };
-      }
-      return node;
-    };
-    return { queryTree: updateChild(state.queryTree) as Group };
-  }),
+      }),
 
-  updateGroupLogic: (id, logic) => set((state) => ({
-    queryTree: recursivelyUpdateNode(state.queryTree, id, (group) => {
-      group.logic = logic;
-    }) as Group,
-  })),
+      updateCondition: (id, updates) => set((state) => {
+        const updateChild = (node: QueryNode): QueryNode => {
+          if ('field' in node && node.id === id) {
+            return { ...node, ...updates };
+          }
+          if ('logic' in node) {
+            return {
+              ...node,
+              children: node.children.map(updateChild),
+            };
+          }
+          return node;
+        };
+        return { queryTree: updateChild(state.queryTree) as Group };
+      }),
 
-  toggleGroupCollapse: (id) => set((state) => ({
-    queryTree: recursivelyUpdateNode(state.queryTree, id, (group) => {
-      group.isCollapsed = !group.isCollapsed;
-    }) as Group,
-  })),
-}));
+      updateGroupLogic: (id, logic) => set((state) => ({
+        queryTree: recursivelyUpdateNode(state.queryTree, id, (group) => {
+          group.logic = logic;
+        }) as Group,
+      })),
+
+      toggleGroupCollapse: (id) => set((state) => ({
+        queryTree: recursivelyUpdateNode(state.queryTree, id, (group) => {
+          group.isCollapsed = !group.isCollapsed;
+        }) as Group,
+      })),
+    }),
+    {
+      name: 'query-patisserie-storage', // The magic memory chip!
+    }
+  )
+);
