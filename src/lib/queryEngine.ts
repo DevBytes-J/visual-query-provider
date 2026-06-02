@@ -1,4 +1,4 @@
-import { QueryTree, Group, Condition, QueryNode } from '../types/query';
+import { Group, Condition, QueryNode } from '../types/query';
 
 // Type guards
 export const isGroup = (node: QueryNode): node is Group => {
@@ -52,14 +52,18 @@ export const generateSQL = (node: QueryNode): string => {
       case 'lt': return `${field} < ${formattedValue}`;
       case 'contains': return `${field} LIKE '%${value}%'`;
       case 'startsWith': return `${field} LIKE '${value}%'`;
-      case 'in': return `${field} IN (${value})`;
-      case 'between': return `${field} BETWEEN ${value[0]} AND ${value[1]}`;
+      case 'in': return `${field} IN (${Array.isArray(value) ? value.map(v => typeof v === 'string' ? `'${v}'` : v).join(', ') : value})`;
+      case 'between': {
+        const valArr = Array.isArray(value) ? value : ['', ''];
+        return `${field} BETWEEN ${valArr[0]} AND ${valArr[1]}`;
+      }
       default: return '';
     }
   }
 };
 
 // MongoDB Generator
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const generateMongo = (node: QueryNode): Record<string, any> => {
   if (isGroup(node)) {
     if (node.children.length === 0) return {};
@@ -77,13 +81,17 @@ export const generateMongo = (node: QueryNode): Record<string, any> => {
       case 'contains': return { [field]: { $regex: value, $options: 'i' } };
       case 'startsWith': return { [field]: { $regex: `^${value}`, $options: 'i' } };
       case 'in': return { [field]: { $in: Array.isArray(value) ? value : [value] } };
-      case 'between': return { [field]: { $gte: value[0], $lte: value[1] } };
+      case 'between': {
+        const valArr = Array.isArray(value) ? value : ['', ''];
+        return { [field]: { $gte: valArr[0], $lte: valArr[1] } };
+      }
       default: return {};
     }
   }
 };
 
 // GraphQL Filter Generator (Hasura style)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const generateGraphQL = (node: QueryNode): Record<string, any> => {
   if (isGroup(node)) {
     if (node.children.length === 0) return {};
@@ -104,4 +112,48 @@ export const generateGraphQL = (node: QueryNode): Record<string, any> => {
       default: return {};
     }
   }
+};
+
+// Evaluate query locally against a dataset
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const evaluateQuery = (dataset: any[], node: QueryNode): any[] => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const evaluateNode = (item: any, n: QueryNode): boolean => {
+    if (isGroup(n)) {
+      if (n.children.length === 0) return true; // Empty group matches everything
+      if (n.logic === 'AND') {
+        return n.children.every(child => evaluateNode(item, child));
+      } else {
+        return n.children.some(child => evaluateNode(item, child));
+      }
+    } else {
+      const { field, operator, value } = n;
+      if (!field || value === undefined || value === '') return true; // Incomplete rule matches everything
+      const itemValue = item[field];
+      
+      switch (operator) {
+        case 'eq': return itemValue == value;
+        case 'neq': return itemValue != value;
+        case 'gt': return Number(itemValue) > Number(value) || new Date(String(itemValue)) > new Date(String(value));
+        case 'lt': return Number(itemValue) < Number(value) || new Date(String(itemValue)) < new Date(String(value));
+        case 'contains': return String(itemValue).toLowerCase().includes(String(value).toLowerCase());
+        case 'startsWith': return String(itemValue).toLowerCase().startsWith(String(value).toLowerCase());
+        case 'in': return Array.isArray(value) ? value.includes(itemValue) : false;
+        case 'between': {
+          const min = Array.isArray(value) ? value[0] : null;
+          const max = Array.isArray(value) ? value[1] : null;
+          if (min && max) {
+             const val = isNaN(Number(itemValue)) ? new Date(String(itemValue)).getTime() : Number(itemValue);
+             const mn = isNaN(Number(min)) ? new Date(String(min)).getTime() : Number(min);
+             const mx = isNaN(Number(max)) ? new Date(String(max)).getTime() : Number(max);
+             return val >= mn && val <= mx;
+          }
+          return true;
+        }
+        default: return true;
+      }
+    }
+  };
+
+  return dataset.filter(item => evaluateNode(item, node));
 };

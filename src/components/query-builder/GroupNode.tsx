@@ -3,8 +3,10 @@ import { useDroppable } from '@dnd-kit/core';
 import { Group } from '../../types/query';
 import { useQueryStore } from '../../store/queryStore';
 import { ConditionNode } from './ConditionNode';
-import { Plus, Trash2, FolderPlus, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, FolderPlus, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface GroupNodeProps {
   node: Group;
@@ -16,18 +18,49 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
   const { addCondition, addGroup, removeNode, updateGroupLogic, toggleGroupCollapse } = useQueryStore();
   
   // Make the Cake Box droppable!
-  const { isOver, setNodeRef } = useDroppable({
+  const { isOver, setNodeRef: setDroppableRef } = useDroppable({
     id: `group-${node.id}`,
   });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: node.id,
+    data: { type: 'Group', node, parentId },
+    disabled: isRoot,
+  });
+
+  const setRefs = (element: HTMLElement | null) => {
+    setDroppableRef(element);
+    setSortableRef(element);
+  };
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
     <motion.div 
       layout
-      ref={setNodeRef}
+      ref={setRefs}
+      style={style}
       className={`p-4 rounded-2xl border-2 ${isOver ? 'border-solid bg-pink-50' : 'border-dashed'} ${isRoot ? 'border-[#E89AB8] bg-[#F8F1E9]/50' : 'border-[#A8D5BA] bg-white/40'} flex flex-col gap-4 backdrop-blur-md transition-all overflow-hidden`}
     >
       {/* Group Header (Cake Box Labels) */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        {!isRoot && (
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-[#D4A373] hover:text-[#A8D5BA] p-1 rounded-md transition-colors">
+            <GripVertical size={20} />
+          </div>
+        )}
+        
         {/* Collapse Toggle */}
         <button 
           onClick={() => toggleGroupCollapse(node.id)}
@@ -52,7 +85,7 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
           </button>
         </div>
         
-        <div className="flex gap-2 ml-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto mt-2 sm:mt-0 justify-end">
           <button onClick={() => addCondition(node.id)} className="flex items-center gap-1 px-3 py-1.5 bg-white/80 hover:bg-white text-[#3F2A1E] border border-pink-200 rounded-lg text-xs font-semibold shadow-sm transition-all" title="Add Macaron">
             <Plus size={14} className="text-[#E89AB8]" /> Add Rule
           </button>
@@ -60,8 +93,9 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
             <FolderPlus size={14} className="text-[#A8D5BA]" /> Add Group
           </button>
           {!isRoot && parentId && (
-            <button onClick={() => removeNode(node.id, parentId)} className="p-1.5 text-pink-400 hover:text-red-500 hover:bg-white rounded-lg transition-colors shadow-sm" title="Throw away this cake box">
+            <button onClick={() => removeNode(node.id)} className="group relative cursor-pointer p-1.5 text-pink-400 hover:text-red-500 hover:bg-white rounded-lg transition-colors shadow-sm">
               <Trash2 size={16} />
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#3F2A1E] text-[#F8F1E9] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">Delete Box</span>
             </button>
           )}
         </div>
@@ -82,14 +116,16 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
                 {isOver ? 'Drop ingredient here!' : 'This cake box is empty! Drag an ingredient here.'}
               </div>
             ) : (
-              <AnimatePresence>
-                {node.children.map((child) => {
-                  if ('logic' in child) {
-                    return <GroupNode key={child.id} node={child} parentId={node.id} />;
-                  }
-                  return <ConditionNode key={child.id} node={child} parentId={node.id} />;
-                })}
-              </AnimatePresence>
+              <SortableContext items={node.children.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <AnimatePresence>
+                  {node.children.map((child) => {
+                    if ('logic' in child) {
+                      return <GroupNode key={child.id} node={child} parentId={node.id} />;
+                    }
+                    return <ConditionNode key={child.id} node={child} parentId={node.id} />;
+                  })}
+                </AnimatePresence>
+              </SortableContext>
             )}
           </motion.div>
         )}
