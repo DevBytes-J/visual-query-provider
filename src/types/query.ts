@@ -6,7 +6,7 @@ export type Condition = {
   id: string;
   field: string;
   operator: Operator;
-  value: any;
+  value: unknown;
   valueType: ValueType;
 };
 
@@ -18,3 +18,5 @@ export type Group = {
 };
 
 export type QueryTree = Group; // root is always a group
+
+export type QueryNode = Group | Condition;
