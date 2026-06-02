@@ -26,17 +26,15 @@ export function QueryPreview() {
 
   return (
     <div className="w-full mt-8 bg-[#2A1B12] rounded-2xl overflow-hidden shadow-xl border-4 border-[#F8F1E9]">
-      {/* Header (Receipt Printer Labels) */}
       <div className="flex flex-col gap-2 px-6 py-4 bg-[#1F140D] border-b border-[#4A3525]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-pink-200 font-bold font-serif flex items-center gap-2">
+            <h3 className="text-pink-200 font-bold flex items-center gap-2">
               <Code size={18} className="text-[#D4A373]" /> Magic Receipt Printer
             </h3>
             <p className="text-xs text-[#D4A373] mt-1">This shows how computers read your rules (like a translation!)</p>
           </div>
           
-          {/* Magic Buttons to switch language */}
           <div className="flex gap-2 self-start sm:self-auto">
             {['SQL', 'Mongo', 'GraphQL'].map((d) => (
               <button
@@ -55,7 +53,6 @@ export function QueryPreview() {
         </div>
       </div>
       
-      {/* Code Area (Where the magic words appear!) */}
       <div className="p-6 relative min-h-[120px]">
         <AnimatePresence mode="wait">
           <motion.pre

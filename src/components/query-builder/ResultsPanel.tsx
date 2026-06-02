@@ -11,8 +11,6 @@ export function ResultsPanel() {
   const [results, setResults] = useState<BakeryItem[] | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // When tree changes, we might want to clear results or keep them stale until simulated
-  // Let's clear them so they have to "Bake" again
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setResults(null);
@@ -20,7 +18,6 @@ export function ResultsPanel() {
 
   const handleSimulate = () => {
     setLoading(true);
-    // Simulate network delay for baking effect
     setTimeout(() => {
       const filtered = evaluateQuery(mockBakeryData, queryTree);
       setResults(filtered);
@@ -30,23 +27,21 @@ export function ResultsPanel() {
 
   return (
     <div className="w-full mt-8 bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden shadow-xl border-2 border-pink-200">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-[#F8F1E9] border-b border-pink-100">
-        <h3 className="text-[#3F2A1E] font-bold font-serif flex items-center gap-2">
-          <Utensils size={18} className="text-[#D4A373]" /> Tasting Table (Simulator)
+      <div className="flex items-center justify-between px-3 sm:px-6 py-4 bg-[#F8F1E9] border-b border-pink-100">
+        <h3 className="text-sm sm:text-base text-[#3F2A1E] font-bold flex items-center gap-1 sm:gap-2 whitespace-nowrap">
+          <Utensils size={18} className="text-[#D4A373] w-4 h-4 sm:w-auto sm:h-auto shrink-0" /> Tasting Table
         </h3>
         
         <button
           onClick={handleSimulate}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-1.5 bg-[#E89AB8] hover:bg-pink-400 text-white rounded-full text-sm font-bold shadow-md transition-all disabled:opacity-70"
+          className="flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-[#E89AB8] hover:bg-pink-400 text-white rounded-full text-xs sm:text-sm font-bold shadow-md transition-all disabled:opacity-70 whitespace-nowrap shrink-0 ml-2"
         >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+          {loading ? <Loader2 size={16} className="animate-spin w-3 h-3 sm:w-4 sm:h-4 shrink-0" /> : <Play size={16} className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />}
           {loading ? 'Baking...' : 'Bake & Taste!'}
         </button>
       </div>
       
-      {/* Results Area */}
       <div className="p-6 min-h-[200px] flex flex-col">
         <AnimatePresence mode="wait">
           {loading && (
@@ -56,7 +51,7 @@ export function ResultsPanel() {
               className="flex-1 flex flex-col items-center justify-center text-pink-300 py-10"
             >
               <Loader2 size={40} className="animate-spin mb-4" />
-              <p className="font-serif italic text-lg">Baking your results in the oven...</p>
+              <p className="italic text-lg">Baking your results in the oven...</p>
             </motion.div>
           )}
 
@@ -67,7 +62,7 @@ export function ResultsPanel() {
               className="flex-1 flex flex-col items-center justify-center text-[#D4A373] py-10"
             >
               <Utensils size={40} className="mb-4 opacity-50" />
-              <p className="font-serif italic text-lg">Click &quot;Bake &amp; Taste&quot; to see what comes out of the oven!</p>
+              <p className="italic text-lg">Click &quot;Bake &amp; Taste&quot; to see what comes out of the oven!</p>
             </motion.div>
           )}
 
@@ -78,7 +73,7 @@ export function ResultsPanel() {
               className="flex-1 flex flex-col items-center justify-center text-[#D4A373] py-10"
             >
               <span className="text-4xl mb-4">💨</span>
-              <p className="font-serif italic text-lg">Oh no! The recipe matched nothing. The oven is empty.</p>
+              <p className="italic text-lg">Oh no! The recipe matched nothing. The oven is empty.</p>
             </motion.div>
           )}
 
