@@ -44,10 +44,8 @@ export function SchemaSidebar() {
     const scroll = () => {
       const isMobile = window.innerWidth < 1300; // matches --breakpoint-pantry
       if (isMobile && speed > 0 && !isHovered) {
-        // Use an integer increment to prevent fractional rounding lockups
         container.scrollLeft += speed;
 
-        // Reset scroll seamlessly when reaching the duplicate set
         const halfWidth = container.scrollWidth / 2;
         if (container.scrollLeft >= halfWidth - 1) {
           container.scrollLeft = 0;
@@ -67,11 +65,10 @@ export function SchemaSidebar() {
     <div className="w-full pantry:w-72 sticky top-0 z-20 bg-[#F8F1E9]/80 backdrop-blur-md border-b pantry:border-b-0 pantry:border-r border-[#D4A373]/20 p-4 pantry:p-6 flex flex-col gap-2 pantry:gap-4 rounded-t-3xl pantry:rounded-t-none pantry:rounded-l-3xl">
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-4">
-          <h3 className="text-base pantry:text-lg font-bold text-[#3F2A1E] font-serif pantry:border-b pantry:border-pink-200 pantry:pb-2 flex-1">
+          <h3 className="text-base pantry:text-lg font-bold text-[#3F2A1E] pantry:border-b pantry:border-pink-200 pantry:pb-2 flex-1">
             Ingredients
           </h3>
           
-          {/* Speed slider visible only on mobile/carousel view */}
           <div className="flex items-center gap-1.5 text-[10px] text-[#D4A373] pantry:hidden bg-white/60 px-2 py-1 rounded-lg border border-pink-100 shadow-sm">
             <span>Speed:</span>
             <input 
