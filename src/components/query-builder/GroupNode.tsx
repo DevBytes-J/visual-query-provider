@@ -17,7 +17,6 @@ interface GroupNodeProps {
 export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
   const { addCondition, addGroup, removeNode, updateGroupLogic, toggleGroupCollapse } = useQueryStore();
   
-  // Make the Cake Box droppable!
   const { isOver, setNodeRef: setDroppableRef } = useDroppable({
     id: `group-${node.id}`,
   });
@@ -53,7 +52,6 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
       style={style}
       className={`p-4 rounded-2xl border-2 ${isOver ? 'border-solid bg-pink-50' : 'border-dashed'} ${isRoot ? 'border-[#E89AB8] bg-[#F8F1E9]/50' : 'border-[#A8D5BA] bg-white/40'} flex flex-col gap-4 backdrop-blur-md transition-all overflow-hidden`}
     >
-      {/* Group Header (Cake Box Labels) */}
       <div className="flex flex-wrap items-center gap-3">
         {!isRoot && (
           <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-[#D4A373] hover:text-[#A8D5BA] p-1 rounded-md transition-colors">
@@ -61,7 +59,6 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
           </div>
         )}
         
-        {/* Collapse Toggle */}
         <button 
           onClick={() => toggleGroupCollapse(node.id)}
           className="p-1 text-[#D4A373] hover:bg-white/60 rounded-md transition-colors"
@@ -101,7 +98,6 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
         </div>
       </div>
 
-      {/* Children List (Animated Folding Magic!) */}
       <AnimatePresence initial={false}>
         {!node.isCollapsed && (
           <motion.div 
@@ -131,7 +127,6 @@ export function GroupNode({ node, parentId, isRoot = false }: GroupNodeProps) {
         )}
       </AnimatePresence>
       
-      {/* Small indicator when folded */}
       {node.isCollapsed && node.children.length > 0 && (
         <div className="pl-4 text-xs text-pink-300 font-medium italic">
           ... {node.children.length} delicious items hidden inside!
